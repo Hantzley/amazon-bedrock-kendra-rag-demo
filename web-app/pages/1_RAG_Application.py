@@ -1,6 +1,9 @@
 import streamlit as st
 import uuid
 import sys
+import boto3
+import logging
+from botocore.exceptions import ClientError
 
 import scripts.kendra_chat_bedrock_claudev2 as bedrock_claudev2
 
@@ -16,6 +19,46 @@ PROVIDER_MAP = {
     'falcon40b': 'Falcon 40B',
     'llama2' : 'Llama 2'
 }
+
+
+#function to generate pre-signed URL
+def create_presigned_url(bucket_name, object_name, expiration=3600):
+    """Generate a presigned URL to share an S3 object
+
+    :param bucket_name: string
+    :param object_name: string
+    :param expiration: Time in seconds for the presigned URL to remain valid
+    :return: Presigned URL as string. If error, returns None.
+    """
+
+    # Generate a presigned URL for the S3 object
+    s3_client = boto3.client('s3')
+    try:
+        response = s3_client.generate_presigned_url('get_object',
+                                                    Params={'Bucket': bucket_name,
+                                                            'Key': object_name},
+                                                    ExpiresIn=expiration)
+    except ClientError as e:
+        logging.error(e)
+        return None
+
+    # The response contains the presigned URL
+    return response
+
+#function to get object size in S3
+def get_object_size(bucket_name, object_name, expiration=3600):
+    s3_client = boto3.client('s3')
+
+   
+    
+    try:
+        response = s3_client.head_object(Bucket=bucket_name, Key=object_name)
+
+    except ClientError as e:
+        logging.error(e)
+        return None
+
+    return response['ContentLength']     
 
 #function to read a properties file and create environment variables
 def read_properties_file(filename):
@@ -169,7 +212,11 @@ def render_sources(sources):
     with col2:
         with st.expander("Sources"):
             for s in sources:
-                st.write(s)
+                s3_bucket_name = s.split('/')[3]
+                key = s.split(s3_bucket_name)[-1][1:]
+                pre_signed_url = create_presigned_url(s3_bucket_name, key)
+                file_size = get_object_size(s3_bucket_name, key)
+                st.markdown(f'[{key.replace("Documents/","")}]({pre_signed_url})  ({round(file_size/1048576,2)} MB)')
 
     
 #Each answer will have context of the question asked in order to associate the provided feedback with the respective question
