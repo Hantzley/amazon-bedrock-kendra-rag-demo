@@ -48,9 +48,6 @@ def create_presigned_url(bucket_name, object_name, expiration=3600):
 #function to get object size in S3
 def get_object_size(bucket_name, object_name, expiration=3600):
     s3_client = boto3.client('s3')
-
-   
-    
     try:
         response = s3_client.head_object(Bucket=bucket_name, Key=object_name)
 
