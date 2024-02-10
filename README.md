@@ -1,5 +1,5 @@
 
-# RAG demo application using Streamlit, Amazon Bedrock, LangChain and Amazon Kendra
+# GenAI RAG demo application using Streamlit, Amazon Bedrock, LangChain and Amazon Kendra
 
 This project offers a sample front-end application built with Streamlit to showcase RAG using Amazon Bedrock, LangChain and Amazon Kendra. 
 You can deploy this CDK project in your AWS account. Alternatively, you can run the Streamlit application on your local machine. 
